@@ -1,0 +1,661 @@
+{
+  "name": "RAGV3_LLM",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "13WwnpNB8aqL4cBMV_my3tP--Jm23V5Lz",
+          "mode": "list",
+          "cachedResultName": "APPLE",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/13WwnpNB8aqL4cBMV_my3tP--Jm23V5Lz"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2176,
+        -816
+      ],
+      "id": "b2c2af4e-3d8a-4ecb-9d04-ba5ac05e460d",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "0EtqBQjhUt80XlFX",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1696,
+        -768
+      ],
+      "id": "04c1ab3d-e110-4732-b68f-4cc3e6641d8a",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "0EtqBQjhUt80XlFX",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8nragllm",
+          "mode": "list",
+          "cachedResultName": "n8nragllm"
+        },
+        "embeddingBatchSize": 2,
+        "options": {
+          "pineconeNamespace": "={{ $('Edit Fields').item.json.File_Name }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        -1312,
+        -880
+      ],
+      "id": "c2b8510c-efed-432c-a757-800d3e2f6a57",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "PP9Qv11x6EJmujCX",
+          "name": "PineconeApi RAGLLM 1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1040,
+        -480
+      ],
+      "id": "52e1ad0d-f298-45fc-ae52-d1377edd7321",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "ubNvwDdVuh29e0Cm",
+          "name": "azougui openAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "Apple_Report",
+                "value": "={{ $('Edit Fields').item.json.File_Name }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -848,
+        -656
+      ],
+      "id": "c69222eb-a5c7-454b-b9e2-3ac1678ed2ba",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "content": "# Knowledge Base",
+        "height": 848,
+        "width": 1888
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        -1008
+      ],
+      "id": "c56c6ff0-bd18-4da8-a248-9c220c0544bd",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# RAG CHATBOT",
+        "height": 976,
+        "width": 1856
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -1056
+      ],
+      "id": "f0131109-e670-4aae-881a-6dbc13521f21",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When chat message received').item.json.chatInput }}",
+        "options": {
+          "systemMessage": "=You are an AI assistant specialized in analyzing Apple's quarterly financial reports. Your main goal is to answer questions accurately and precisely using the vector database, which contains relevant Q1 reports.\n\nProvide only information that comes directly from these reports or verified data. If the requested information is missing or unclear, explicitly state that there is insufficient data.\nKeep responses concise and to the point. Include specific numbers and facts whenever possible, and clearly indicate whether the information is sourced from Q1.\nDeliver quick, reliable insights into Apple's quarterly financials without adding unnecessary details."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        -816
+      ],
+      "id": "c9507be7-59fc-4c41-9ad1-35f892c0c973",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -240,
+        -848
+      ],
+      "id": "51b1eb3a-ebb0-430a-b1ac-cc8e77afc017",
+      "name": "When chat message received",
+      "webhookId": "e1e21d15-a4e5-415f-adaf-374a4cae229f"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        16,
+        -560
+      ],
+      "id": "4e2fab1c-fcfc-4e92-b230-a1083180d78e",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "ubNvwDdVuh29e0Cm",
+          "name": "azougui openAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Returns documents related to Apple Q1 reports, including financials, outlook, margins, and all key details from the earnings reports."
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        -640
+      ],
+      "id": "faa73fc1-4bb8-45ff-bfc0-0fb051b9ab80",
+      "name": "Answer questions with a vector store"
+    },
+    {
+      "parameters": {
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8nragllm",
+          "mode": "list",
+          "cachedResultName": "n8nragllm"
+        },
+        "options": {
+          "pineconeNamespace": "={{ $json.File_Name }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        544,
+        -464
+      ],
+      "id": "667430e2-b747-4060-8041-f865af1462c1",
+      "name": "Pinecone Vector Store1",
+      "credentials": {
+        "pineconeApi": {
+          "id": "PP9Qv11x6EJmujCX",
+          "name": "PineconeApi RAGLLM 1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        -240
+      ],
+      "id": "32abbfee-3ec5-4364-8e50-a23c4818207c",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "ubNvwDdVuh29e0Cm",
+          "name": "azougui openAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1136,
+        -400
+      ],
+      "id": "0d77cf53-aa46-43a2-b7e9-fd610e06c84e",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "ubNvwDdVuh29e0Cm",
+          "name": "azougui openAI"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2192,
+        -576
+      ],
+      "id": "3bc00703-a908-43d5-b207-76089f7e0d31",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "13WwnpNB8aqL4cBMV_my3tP--Jm23V5Lz",
+            "mode": "list",
+            "cachedResultName": "APPLE",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/13WwnpNB8aqL4cBMV_my3tP--Jm23V5Lz"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1984,
+        -528
+      ],
+      "id": "44fa6e47-07ad-43bc-b0a5-431d326c7440",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "0EtqBQjhUt80XlFX",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.File_ID }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1616,
+        -512
+      ],
+      "id": "24c706f1-6c69-4091-9b1c-7cc07956e84f",
+      "name": "Download file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "0EtqBQjhUt80XlFX",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1456,
+        -592
+      ],
+      "id": "bb18f13b-b1ae-48c1-91f4-cd240fedd0f8",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e72f5ba9-f8c5-4660-88c6-da02e01d074e",
+              "name": "File_Name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "fd48b90f-8302-4659-b6d8-d6507824f24d",
+              "name": "File_ID",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1808,
+        -496
+      ],
+      "id": "ae74e2b0-0cc1-4880-a8ef-56aff34f328f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        -336
+      ],
+      "id": "ab2a51c2-8a69-440b-b84c-72d7b56e425e",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "51afeafc-825d-464e-8c08-afe43abb9c33",
+              "name": "File_Name",
+              "value": "={{ \n  (\n    ($json[\"chatInput\"].match(/Q[1-9]/i) || [])[0] \n      ?.toUpperCase()\n      .replace(/[\\s\\r\\n]+/g, \"\")\n  ) + \".pdf\" \n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -16,
+        -848
+      ],
+      "id": "125d1edb-010d-449f-8190-b268fa1fd149",
+      "name": "Edit Fields1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer questions with a vector store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store1": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Answer questions with a vector store",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Answer questions with a vector store",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Download file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c69c06ca-cffb-4eb9-8646-2cce0f6d6902",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3a93daa6c03341fb40d0aca06d044d0d803c88b2e01484f2f0265dd8e4452de2"
+  },
+  "id": "ODWB3IEfsNVXvigU",
+  "tags": []
+}
